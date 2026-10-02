@@ -241,6 +241,46 @@
       letter-spacing: 0.1px;
       margin-top: 2px;
     }
+
+    .savings-block {
+      display: none;
+      margin-top: 8px;
+      background: rgba(89,212,153,0.07);
+      border: 1px solid rgba(89,212,153,0.22);
+      border-radius: 8px;
+      padding: 11px 14px;
+      gap: 6px;
+      flex-direction: column;
+    }
+
+    .savings-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: rgba(89,212,153,0.6);
+    }
+
+    .savings-values {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .savings-rub {
+      font-size: 15px;
+      font-weight: 500;
+      color: #59d499;
+      letter-spacing: 0.2px;
+    }
+
+    .savings-pct {
+      font-size: 13px;
+      font-weight: 400;
+      color: rgba(89,212,153,0.7);
+      letter-spacing: 0.1px;
+    }
   </style>
 </head>
 <body>
@@ -316,6 +356,14 @@
         </div>
 
         <div class="equal-note" id="equal-note" style="display:none">Продукты одинаково выгодны</div>
+
+        <div class="savings-block" id="savings-block">
+          <div class="savings-label">Выгода</div>
+          <div class="savings-values">
+            <span class="savings-rub" id="savings-rub"></span>
+            <span class="savings-pct" id="savings-pct"></span>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -348,6 +396,7 @@
       const badge1 = document.getElementById('badge1');
       const badge2 = document.getElementById('badge2');
       const note = document.getElementById('equal-note');
+      const savingsBlock = document.getElementById('savings-block');
 
       const net1 = g1 * (1 - w1 / 100);
       const ppg1 = p1 / net1;
@@ -360,6 +409,7 @@
       badge1.style.display = 'none';
       badge2.style.display = 'none';
       note.style.display = 'none';
+      savingsBlock.style.display = 'none';
 
       if (has2) {
         const net2 = g2 * (1 - w2 / 100);
@@ -375,12 +425,23 @@
         const eps = 0.00001;
         if (Math.abs(ppg1 - ppg2) < eps) {
           note.style.display = 'block';
-        } else if (ppg1 < ppg2) {
-          row1.classList.add('winner');
-          badge1.style.display = 'inline';
         } else {
-          row2.classList.add('winner');
-          badge2.style.display = 'inline';
+          const cheaperKg = Math.min(ppkg1, ppkg2);
+          const expensiveKg = Math.max(ppkg1, ppkg2);
+          const diffRub = expensiveKg - cheaperKg;
+          const diffPct = (diffRub / expensiveKg) * 100;
+
+          document.getElementById('savings-rub').textContent = fmt(diffRub) + ' ₽/кг';
+          document.getElementById('savings-pct').textContent = 'на ' + diffPct.toFixed(1) + '% дешевле';
+          savingsBlock.style.display = 'flex';
+
+          if (ppg1 < ppg2) {
+            row1.classList.add('winner');
+            badge1.style.display = 'inline';
+          } else {
+            row2.classList.add('winner');
+            badge2.style.display = 'inline';
+          }
         }
       } else {
         row2.style.display = 'none';
