@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Калькулятор выгоды продукта</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #07080a;
+      color: #f4f4f6;
+      font-family: 'Inter', 'Inter Fallback', system-ui, sans-serif;
+      font-feature-settings: "calt", "kern", "liga", "ss03";
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+
+    .card {
+      background: #0d0d0d;
+      border: 1px solid #242728;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
+    }
+
+    /* Hero stripe — signature Raycast red gradient band */
+    .card-header {
+      position: relative;
+      padding: 28px 28px 24px;
+      border-bottom: 1px solid #242728;
+      overflow: hidden;
+    }
+
+    .card-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(118deg, rgba(255,87,87,0.13) 0%, transparent 55%),
+        linear-gradient(118deg, rgba(161,19,26,0.08) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    .card-header::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #ff5757 0%, #a1131a 60%, transparent 100%);
+    }
+
+    .card-title {
+      position: relative;
+      font-size: 16px;
+      font-weight: 500;
+      color: #f4f4f6;
+      letter-spacing: 0.2px;
+      line-height: 1.4;
+    }
+
+    .card-subtitle {
+      position: relative;
+      margin-top: 4px;
+      font-size: 13px;
+      font-weight: 400;
+      color: #6a6b6c;
+      letter-spacing: 0.1px;
+    }
+
+    .card-body {
+      padding: 20px 28px 28px;
+    }
+
+    /* Product block */
+    .product-block {
+      background: #101111;
+      border: 1px solid #242728;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 10px;
+    }
+
+    .product-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #6a6b6c;
+      margin-bottom: 12px;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      color: #6a6b6c;
+      letter-spacing: 0.1px;
+      margin-bottom: 5px;
+    }
+
+    .field input {
+      width: 100%;
+      background: #07080a;
+      border: 1px solid #242728;
+      border-radius: 6px;
+      color: #f4f4f6;
+      font-family: inherit;
+      font-feature-settings: "calt", "kern", "liga", "ss03";
+      font-size: 14px;
+      font-weight: 400;
+      padding: 7px 10px;
+      outline: none;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+
+    .field input::-webkit-outer-spin-button,
+    .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .field input::placeholder { color: #434345; }
+
+    .field input:focus {
+      border-color: rgba(255,255,255,0.16);
+    }
+
+    /* Primary CTA — white pill, Raycast style */
+    .btn-calculate {
+      width: 100%;
+      margin-top: 16px;
+      padding: 0 16px;
+      height: 36px;
+      background: #ffffff;
+      color: #000000;
+      font-family: inherit;
+      font-feature-settings: "calt", "kern", "liga", "ss03";
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-calculate:hover { background: #e8e8e8; }
+    .btn-calculate:active { transform: scale(0.98); background: #d8d8d8; }
+
+    /* Results */
+    #result {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .divider {
+      height: 1px;
+      background: #242728;
+      margin-bottom: 16px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #101111;
+      border: 1px solid #242728;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .result-row.winner {
+      border-color: rgba(89,212,153,0.35);
+      background: rgba(89,212,153,0.05);
+    }
+
+    .result-name {
+      font-size: 12px;
+      font-weight: 400;
+      color: #6a6b6c;
+      letter-spacing: 0.1px;
+      margin-bottom: 4px;
+    }
+
+    .result-prices {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .result-ppg {
+      font-size: 15px;
+      font-weight: 500;
+      color: #f4f4f6;
+      letter-spacing: 0.2px;
+    }
+
+    .result-ppkg {
+      font-size: 13px;
+      font-weight: 400;
+      color: #9c9c9d;
+      letter-spacing: 0.1px;
+    }
+
+    .result-row.winner .result-ppg { color: #59d499; }
+    .result-row.winner .result-ppkg { color: rgba(89,212,153,0.7); }
+
+    /* Badge — same as badge-info-soft but green */
+    .badge {
+      display: none;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+      background: rgba(89,212,153,0.15);
+      color: #59d499;
+      border-radius: 4px;
+      padding: 2px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .equal-note {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 400;
+      color: #434345;
+      letter-spacing: 0.1px;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Калькулятор стоимости продукта</div>
+      <div class="card-subtitle">Цена за грамм и кг с учётом отходов</div>
+    </div>
+
+    <div class="card-body">
+
+      <div class="product-block">
+        <div class="product-label">Продукт 1</div>
+        <div class="fields">
+          <div class="field">
+            <label>Граммы</label>
+            <input type="number" id="g1" min="0" step="any" placeholder="100" />
+          </div>
+          <div class="field">
+            <label>Цена, ₽</label>
+            <input type="number" id="p1" min="0" step="any" placeholder="50" />
+          </div>
+          <div class="field">
+            <label>% отхода</label>
+            <input type="number" id="w1" min="0" max="99" step="any" value="0" />
+          </div>
+        </div>
+      </div>
+
+      <div class="product-block">
+        <div class="product-label">Продукт 2 <span style="color:#434345;font-weight:400;text-transform:none;letter-spacing:0">— необязательно</span></div>
+        <div class="fields">
+          <div class="field">
+            <label>Граммы</label>
+            <input type="number" id="g2" min="0" step="any" placeholder="150" />
+          </div>
+          <div class="field">
+            <label>Цена, ₽</label>
+            <input type="number" id="p2" min="0" step="any" placeholder="70" />
+          </div>
+          <div class="field">
+            <label>% отхода</label>
+            <input type="number" id="w2" min="0" max="99" step="any" value="0" />
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-calculate" onclick="calculate()">Рассчитать</button>
+
+      <div id="result">
+        <div class="divider"></div>
+
+        <div class="result-row" id="row1">
+          <div>
+            <div class="result-name">Продукт 1</div>
+            <div class="result-prices">
+              <span class="result-ppg" id="ppg1"></span>
+              <span class="result-ppkg" id="ppkg1"></span>
+            </div>
+          </div>
+          <span class="badge" id="badge1">ВЫГОДНЕЕ</span>
+        </div>
+
+        <div class="result-row" id="row2" style="display:none">
+          <div>
+            <div class="result-name">Продукт 2</div>
+            <div class="result-prices">
+              <span class="result-ppg" id="ppg2"></span>
+              <span class="result-ppkg" id="ppkg2"></span>
+            </div>
+          </div>
+          <span class="badge" id="badge2">ВЫГОДНЕЕ</span>
+        </div>
+
+        <div class="equal-note" id="equal-note" style="display:none">Продукты одинаково выгодны</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function fmt(val) {
+      return val < 1 ? val.toFixed(3) : val.toFixed(2);
+    }
+
+    function calculate() {
+      const g1 = parseFloat(document.getElementById('g1').value);
+      const p1 = parseFloat(document.getElementById('p1').value);
+      const w1 = parseFloat(document.getElementById('w1').value) || 0;
+
+      const g2 = parseFloat(document.getElementById('g2').value);
+      const p2 = parseFloat(document.getElementById('p2').value);
+      const w2 = parseFloat(document.getElementById('w2').value) || 0;
+
+      const has1 = g1 > 0 && p1 > 0;
+      const has2 = g2 > 0 && p2 > 0;
+
+      if (!has1) {
+        alert('Заполните граммы и цену для Продукта 1.');
+        return;
+      }
+
+      const row1 = document.getElementById('row1');
+      const row2 = document.getElementById('row2');
+      const badge1 = document.getElementById('badge1');
+      const badge2 = document.getElementById('badge2');
+      const note = document.getElementById('equal-note');
+
+      const net1 = g1 * (1 - w1 / 100);
+      const ppg1 = p1 / net1;
+      const ppkg1 = ppg1 * 1000;
+
+      document.getElementById('ppg1').textContent = fmt(ppg1) + ' ₽/г';
+      document.getElementById('ppkg1').textContent = fmt(ppkg1) + ' ₽/кг';
+
+      row1.classList.remove('winner');
+      badge1.style.display = 'none';
+      badge2.style.display = 'none';
+      note.style.display = 'none';
+
+      if (has2) {
+        const net2 = g2 * (1 - w2 / 100);
+        const ppg2 = p2 / net2;
+        const ppkg2 = ppg2 * 1000;
+
+        document.getElementById('ppg2').textContent = fmt(ppg2) + ' ₽/г';
+        document.getElementById('ppkg2').textContent = fmt(ppkg2) + ' ₽/кг';
+
+        row2.style.display = 'flex';
+        row2.classList.remove('winner');
+
+        const eps = 0.00001;
+        if (Math.abs(ppg1 - ppg2) < eps) {
+          note.style.display = 'block';
+        } else if (ppg1 < ppg2) {
+          row1.classList.add('winner');
+          badge1.style.display = 'inline';
+        } else {
+          row2.classList.add('winner');
+          badge2.style.display = 'inline';
+        }
+      } else {
+        row2.style.display = 'none';
+      }
+
+      document.getElementById('result').style.display = 'block';
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') calculate();
+    });
+  </script>
+</body>
+</html>
